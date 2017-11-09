@@ -35,7 +35,10 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/main.o
+	${OBJECTDIR}/main.o \
+	${OBJECTDIR}/source/LowLevelControl.o \
+	${OBJECTDIR}/source/Serial_CSV_Format.o \
+	${OBJECTDIR}/source/ServoBlaster.o
 
 
 # C Compiler Flags
@@ -66,6 +69,21 @@ ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
+
+${OBJECTDIR}/source/LowLevelControl.o: source/LowLevelControl.cpp
+	${MKDIR} -p ${OBJECTDIR}/source
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/source/LowLevelControl.o source/LowLevelControl.cpp
+
+${OBJECTDIR}/source/Serial_CSV_Format.o: source/Serial_CSV_Format.cpp
+	${MKDIR} -p ${OBJECTDIR}/source
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/source/Serial_CSV_Format.o source/Serial_CSV_Format.cpp
+
+${OBJECTDIR}/source/ServoBlaster.o: source/ServoBlaster.cpp
+	${MKDIR} -p ${OBJECTDIR}/source
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/source/ServoBlaster.o source/ServoBlaster.cpp
 
 # Subprojects
 .build-subprojects:
