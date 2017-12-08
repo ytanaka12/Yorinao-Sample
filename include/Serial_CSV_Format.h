@@ -20,7 +20,7 @@ namespace nsSerial_CSV_Format{
 	
 	const char DEVICE_FILE_NAME[30] = "/dev/ttyACM0";
 	//const char DEVICE_FILE_NAME[30] = "/dev/ttyUSB0";
-	const int WAIT_TIME_FOR_RECEIVE = 3000;	//[usec]//enc: 5000
+	const int WAIT_TIME_FOR_RECEIVE = 5000;	//[usec]//enc: 5000
 	#define BAUD_RATE B115200
 
 	class Serial_CSV_Format {

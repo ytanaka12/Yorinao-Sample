@@ -36,9 +36,12 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/main.o \
+	${OBJECTDIR}/source/Interpolations.o \
 	${OBJECTDIR}/source/LowLevelControl.o \
 	${OBJECTDIR}/source/Serial_CSV_Format.o \
-	${OBJECTDIR}/source/ServoBlaster.o
+	${OBJECTDIR}/source/ServoBlaster.o \
+	${OBJECTDIR}/source/TimeCount.o \
+	${OBJECTDIR}/source/TimeKeeper.o
 
 
 # C Compiler Flags
@@ -70,6 +73,11 @@ ${OBJECTDIR}/main.o: main.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
 
+${OBJECTDIR}/source/Interpolations.o: source/Interpolations.cpp
+	${MKDIR} -p ${OBJECTDIR}/source
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/source/Interpolations.o source/Interpolations.cpp
+
 ${OBJECTDIR}/source/LowLevelControl.o: source/LowLevelControl.cpp
 	${MKDIR} -p ${OBJECTDIR}/source
 	${RM} "$@.d"
@@ -84,6 +92,16 @@ ${OBJECTDIR}/source/ServoBlaster.o: source/ServoBlaster.cpp
 	${MKDIR} -p ${OBJECTDIR}/source
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/source/ServoBlaster.o source/ServoBlaster.cpp
+
+${OBJECTDIR}/source/TimeCount.o: source/TimeCount.cpp
+	${MKDIR} -p ${OBJECTDIR}/source
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/source/TimeCount.o source/TimeCount.cpp
+
+${OBJECTDIR}/source/TimeKeeper.o: source/TimeKeeper.cpp
+	${MKDIR} -p ${OBJECTDIR}/source
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/source/TimeKeeper.o source/TimeKeeper.cpp
 
 # Subprojects
 .build-subprojects:

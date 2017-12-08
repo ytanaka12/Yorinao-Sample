@@ -20,6 +20,7 @@
 #include <string.h>
 #include <string>
 #include <termios.h>  
+#include <stdexcept>
 
 
 using namespace std;
@@ -109,7 +110,15 @@ namespace nsSerial_CSV_Format{
 			}
 			
 			if(buf[0] == ','){
-				double val = stod(receive_msg);
+				double val = 0.0;
+				try{
+					val = stod(receive_msg);
+				}
+				catch(std::invalid_argument e){
+					cout << "invalid argumant: " << endl;
+					Value.clear();
+					return;
+				}
 				Value.push_back(val);
 				receive_msg.clear();
 			}else{

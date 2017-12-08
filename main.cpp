@@ -21,6 +21,8 @@
 #include "ServoBlaster.h"
 #include "Serial_CSV_Format.h"
 #include "LowLevelControl.h"
+#include "TimeKeeper.h"
+#include "Interpolations.h"
 
 using namespace std;
 
@@ -58,7 +60,63 @@ int main(int argc, char** argv) {
 	sb.SendPulseWidth_us(1, 0);
 	sb.SendPulseWidth_us(2, 0);
 	sb.SendPulseWidth_us(3, 0);
+	sb.SendPulseWidth_us(4, 0);
+	sb.SendPulseWidth_us(5, 0);
+	sb.SendPulseWidth_us(6, 0);
+	sb.SendPulseWidth_us(7, 0);
+	sb.SendPulseWidth_us(8, 0);
+	sb.SendPulseWidth_us(9, 0);
+	sb.SendPulseWidth_us(10, 0);
+	sb.SendPulseWidth_us(11, 0);
+	sb.SendPulseWidth_us(12, 0);
+	sb.SendPulseWidth_us(13, 0);
 	usleep(10000);
+
+	/*----------------*/
+	/* --- Idling --- */
+	/*----------------*/
+	cout << "Wait";
+	for(int i = 0 ; i < 200 ; i++){
+		serial.Update();
+		cout << ".";
+	}
+	cout << endl;
+	/*----------------*/
+	/*----------------*/
+	/*----------------*/
+
+	const double ENC2ANGLE[7] = {- 1.0 / 2.0,
+								- 10.0 / 49.0,
+								- 25.0 / 27.0,
+								  10.0 / 45.0,
+								  18.0 / 27.0,
+								  10.0 / 45.0,
+								  10.0 / 30.0};
+	
+	double desAng[7] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+	double curAng[7] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+	
+	double TargetAng[7] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+	TargetAng[0] = 0.0 * DEG2RAD;
+	TargetAng[1] = -45.0 * DEG2RAD;
+	TargetAng[2] = 0.0 * DEG2RAD;
+	TargetAng[3] = 90.0 * DEG2RAD;
+	TargetAng[4] = 0.0 * DEG2RAD;
+	TargetAng[5] = 0.0 * DEG2RAD;
+	TargetAng[6] = 0.0 * DEG2RAD;
+
+	vector<double>buf_enc = serial.GetValues();
+	for(int i = 0 ; i < 7 ; i++){
+		curAng[i] = buf_enc[i] * ENC2ANGLE[i];
+	}
+	
+	Interpolations intplt[7];
+	for(int i = 0 ; i < 7 ; i++){
+		intplt[i].Set_Conditions(1.0, curAng[i], TargetAng[i]);
+	}
+	
+	//Time Keeper
+	nsTimeKeeper::TimeKeeper tk;
 	
 	while(true){
 		if(digitalRead(BUTTON_INPUT_PORT) == 1){
@@ -68,84 +126,110 @@ int main(int argc, char** argv) {
 		//Get Angles
 		serial.Update();
 		vector<double> bufs = serial.GetValues();
-		static vector<double> angles{0.0 , 0.0, 0.0};
-		if(bufs.size() == 0){
+		static vector<double> angles{0.0 , 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+		if(bufs.size() < 7){
 			//cout << "encoder signal is invalid" << endl;
 			//break;
 		}else{
 			angles = bufs;
 		}
 
-		angles[0] *= - 1.0 / 2.0;	//ratio
-		angles[1] *= - 2.0 / 9.0;	//ratio
-		angles[2] *= - 50.0 / 55.0;	//ratio
+		for(int i = 0 ; i < 7 ; i++){
+			curAng[i] = angles[i] * ENC2ANGLE[i];
+		}
 		
-//		int pwm = 500 * cos((double)tick / 1000.0) + 1500.0;
-//		sb.SendPulseWidth_us(0, pwm);
-//		sb.SendPulseWidth_us(1, 0);
+		desAng[1] = intplt[1].Get_Interpolated_X();
+		desAng[3] = intplt[3].Get_Interpolated_X();
 		
-		double Target_0 = 0.0 * DEG2RAD;
-		double Target_1 = 0.0 * DEG2RAD;
-		double Target_2 = 0.0 * DEG2RAD;
+		for(int i = 0 ; i < 7 ; i++){
+			intplt[i].Update();
+			desAng[i] = intplt[i].Get_Interpolated_X();
+		}
 		
+		//
+		//
+		//
 		LowLevelControl llc_0;
 		llc_0.Set_pGain(2000.0);
-		llc_0.Set_Desired_X(Target_0);
-		llc_0.Set_Current_X(angles[0]);
+		llc_0.Set_Desired_X(desAng[0]);
+		llc_0.Set_Current_X(curAng[0]);
 		llc_0.Update();
 		sb.SendPulseWidth_us(0, llc_0.Get_Output_A() );
 		sb.SendPulseWidth_us(1, llc_0.Get_Output_B() );
 		
 		LowLevelControl llc_1;
-		llc_1.Set_pGain(2000.0);
-		llc_1.Set_Desired_X(Target_1);
-		llc_1.Set_Current_X(angles[1]);
+		llc_1.Set_pGain(4000.0);
+		llc_1.Set_Desired_X(desAng[1]);
+		llc_1.Set_Current_X(curAng[1]);
 		llc_1.Update();
 		sb.SendPulseWidth_us(2, llc_1.Get_Output_A() );
 		sb.SendPulseWidth_us(3, llc_1.Get_Output_B() );
 
 		LowLevelControl llc_2;
 		llc_2.Set_pGain(2000.0);
-		llc_2.Set_Desired_X(Target_2);
-		llc_2.Set_Current_X(angles[2]);
+		llc_2.Set_Desired_X(desAng[2]);
+		llc_2.Set_Current_X(curAng[2]);
 		llc_2.Update();
 		sb.SendPulseWidth_us(4, llc_2.Get_Output_A() );
 		sb.SendPulseWidth_us(5, llc_2.Get_Output_B() );
 		
-//		double pGain = 2000.0;
-//		double dGain = 1.0;
-//		double target = 0.0 * DEG2RAD;
-//		double output = pGain * (target - angles[0]);
-//		
-//		if(0.0 < output){
-//			output += 1000.0;
-//			if(3000.0 < output){
-//				output = 3000.0;
-//			}
-//			sb.SendPulseWidth_us(0, 0);
-//			sb.SendPulseWidth_us(1, (int)output);
-//		}else{
-//			output = - output;	
-//			output += 1000.0;
-//			if(3000.0 < output){
-//				output = 3000.0;
-//			}
-//			sb.SendPulseWidth_us(0, (int)output);
-//			sb.SendPulseWidth_us(1, 0);
-//		}
+		LowLevelControl llc_3;
+		llc_3.Set_pGain(4000.0);
+		llc_3.Set_Desired_X(desAng[3]);
+		llc_3.Set_Current_X(curAng[3]);
+		llc_3.Update();
+		sb.SendPulseWidth_us(6, llc_3.Get_Output_A() );
+		sb.SendPulseWidth_us(7, llc_3.Get_Output_B() );
+		
+		LowLevelControl llc_4;
+		llc_4.Set_pGain(2000.0);
+		llc_4.Set_Desired_X(desAng[4]);
+		llc_4.Set_Current_X(curAng[4]);
+		llc_4.Update();
+		sb.SendPulseWidth_us(9, llc_4.Get_Output_A() );
+		sb.SendPulseWidth_us(8, llc_4.Get_Output_B() );
+		
+		LowLevelControl llc_5;
+		llc_5.Set_pGain(3000.0);
+		llc_5.Set_Desired_X(desAng[5]);
+		llc_5.Set_Current_X(curAng[5]);
+		llc_5.Update();
+		sb.SendPulseWidth_us(11, llc_5.Get_Output_A() );
+		sb.SendPulseWidth_us(10, llc_5.Get_Output_B() );
+		
+		LowLevelControl llc_6;
+		llc_6.Set_pGain(2000.0);
+		llc_6.Set_Desired_X(desAng[6]);
+		llc_6.Set_Current_X(curAng[6]);
+		llc_6.Update();
+		sb.SendPulseWidth_us(12, llc_6.Get_Output_A() );
+		sb.SendPulseWidth_us(13, llc_6.Get_Output_B() );
+		
+		//
+		//
+		//
+		tk.TimeKeep();
 
 		if(tick%50 == 0){
 			cout << "tick = " << tick;
-//			cout << " / pwm = " << output;
-			cout << " angle: " << angles[0] * RAD2DEG;
-			cout << " / " << angles[1] * RAD2DEG;
-			cout << " / " << angles[2] * RAD2DEG;
+			cout << endl;
+			
+			cout << "CurAng: ";
+			for(int i = 0 ; i < 7 ; i++){
+				cout << curAng[i] * RAD2DEG << " / ";
+			}
+			cout << endl;
+			
+			cout << "DesAng: ";
+			for(int i = 0 ; i < 7 ; i++){
+				cout << desAng[i] * RAD2DEG << " / ";
+			}
 			cout << endl;
 		}
 
 		tick++;
 
-		usleep(1000);
+		//usleep(1000);
 	}
 
 	return 0;
